@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  lint:
+  lint-php:
     name: PHP Linting
     runs-on: ubuntu-latest
 
@@ -24,4 +24,25 @@ jobs:
 
       - name: Run PHP Linter
         run: find . -name "*.php" -print0 | xargs -0 -n1 php -l
+
+  lint-js:
+    name: JavaScript Linting
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install ESLint
+        run: |
+          npm install --save-dev eslint
+          npx eslint --init
+
+      - name: Run ESLint
+        run: npx eslint . --ext .js,.jsx,.ts,.tsx
 
