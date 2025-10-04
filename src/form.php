@@ -1,4 +1,9 @@
 <body class="content-dark">
+    <?php if (!is_dir(dirname(__FILE__) . "/vendor")) { ?>
+        <div class="alert alert-warning" style="width: 100%; text-align: left; margin: 0; border-radius: 0;">
+            <strong>Warning!</strong> The vendor folder is missing. Please run <code>composer install</code> in the src directory to install dependencies.
+        </div>
+    <?php } ?>
     <img class="margin_right" src="static/img/blankoukko.png" alt="Blanko logo" />
     <div class="container">
         <h1>Tiedotustorvi</h1>
@@ -14,6 +19,7 @@
             <div class="row align-items-start">
                 <div class="col-12 col-lg-6 main-wrap">
                     <form method="post" action="index.php" enctype="multipart/form-data">
+                        <?php echo csrf_token_field(); ?>
                         <label for="title" class="mb-2">Title</label>
                         <input id="title" name="title" class="form-control form-control-lg bg-dark text-white" required="" />
                         <label for="description" class="mb-2">Description</label>

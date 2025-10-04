@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <?php
+require_once dirname(__FILE__) . "/csrf.php";
+require_once dirname(__FILE__) . "/file_upload.php";
 require_once dirname(__FILE__) . "/header.inc.php";
 require_once dirname(__FILE__) . "/form.php";
 require_once dirname(__FILE__) . "/integrations/discord.msg.send.php";
@@ -13,6 +15,12 @@ $protocol = $_SERVER["HTTPS"] == "on" ? "https" : "http";
 $redirect_url = "{$protocol}://{$_SERVER["HTTP_HOST"]}";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Validate CSRF token
+    if (!validate_csrf_token($_POST['csrf_token'] ?? null)) {
+        header("Location: {$redirect_url}/index.php?status=error", true, 303);
+        exit;
+    }
+
     if (
         !isset($_POST["title"]) ||
         !isset($_POST["description"]) ||
@@ -21,7 +29,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         !isset($_POST["ready"]) ||
         !isset($_POST["tag"])
     ) {
-        header("Location: {$redirect_url}/index.php?status=error", true, 301);
+        header("Location: {$redirect_url}/index.php?status=error", true, 303);
+        exit;
+    }
+
+    // Validate file upload if blankoweb is selected
+    if (isset($_POST["blankoweb"]) && isset($_FILES['featuredimage'])) {
+        $file_validation = validate_uploaded_file($_FILES['featuredimage']);
+        if (!$file_validation['valid']) {
+            header("Location: {$redirect_url}/index.php?status=error", true, 303);
+            exit;
+        }
     }
 
     $title = $_POST["title"];
@@ -31,9 +49,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $signature = $_POST["signature"];
     $reply_to = $_POST["reply-to"];
     $datetime_start = $datetime_end = $url = "";
-    $imageUrl = $_FILES['featuredimage']['tmp_name'];
-    $imageName = $_FILES['featuredimage']['name'];
-    $imageType = $_FILES['featuredimage']['type'];
+    $imageUrl = $_FILES['featuredimage']['tmp_name'] ?? '';
+    $imageName = $_FILES['featuredimage']['name'] ?? '';
+    $imageType = $_FILES['featuredimage']['type'] ?? '';
     $email_response = "";
 
     // preprocess form info
@@ -59,14 +77,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     if( $email_response != ""){
-    	header("Location: {$redirect_url}/index.php?status=error", true, 301);
+    	header("Location: {$redirect_url}/index.php?status=error", true, 303);
+        exit;
     }
 
     // if datetime is set, create calendar event
     //if($datetime_start != '') create_gcal_event($title, $datetime_start, $datetime_end);
 
     // Redirect back
-    header("Location: {$redirect_url}/index.php?status=success", true, 301);
+    header("Location: {$redirect_url}/index.php?status=success", true, 303);
+    exit;
 }
 ?>
 </html>
